@@ -1,0 +1,155 @@
+import { initializeApp } from "firebase/app";
+
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+
+import { getFirestore, collection, addDoc, query, where, getDocs } from "firebase/firestore"; 
+
+// Firebase configuration
+
+const firebaseConfig = {
+
+    apiKey: "AIzaSyD4Mapo6FTHc2KX4kfv5FTvMwGIjcBYhLI",
+
+    authDomain: "voting-31bf3.firebaseapp.com",
+
+    projectId: "voting-31bf3",
+
+    storageBucket: "voting-31bf3.appspot.com",
+
+    messagingSenderId: "464140862271",
+
+    appId: "1:464140862271:web:44903c46b793a21714498a"
+
+};
+
+// Initialize Firebase
+
+const app = initializeApp(firebaseConfig);
+
+const auth = getAuth(app);
+
+const db = getFirestore(app);
+
+// Sign Up Function
+
+document.getElementById('signup-btn').addEventListener('click', async () => {
+
+    const email = document.getElementById('signup-email').value;
+
+    const password = document.getElementById('signup-password').value;
+
+    try {
+
+        await createUserWithEmailAndPassword(auth, email, password);
+
+        document.getElementById('message').innerText = 'User registered successfully!';
+
+    } catch (error) {
+
+        document.getElementById('message').innerText = error.message;
+
+    }
+
+});
+
+// Sign In Function
+
+document.getElementById('signin-btn').addEventListener('click', async () => {
+
+    const email = document.getElementById('signin-email').value;
+
+    const password = document.getElementById('signin-password').value;
+
+    try {
+
+        await signInWithEmailAndPassword(auth, email, password);
+
+        document.getElementById('message').innerText = 'User signed in successfully!';
+
+        document.getElementById('vote-section').style.display = 'block';
+
+    } catch (error) {
+
+        document.getElementById('message').innerText = error.message;
+
+    }
+
+});
+
+// Add Vote Function
+
+async function addVote(userId, candidate) {
+
+    try {
+
+        await addDoc(collection(db, "votes"), { userId, candidate });
+
+        document.getElementById('message').innerText = 'Vote recorded!';
+
+    } catch (error) {
+
+        document.getElementById('message').innerText = error.message;
+
+    }
+
+}
+
+// Vote Button Click Event
+
+document.getElementById('vote-candidate1').addEventListener('click', async () => {
+
+    const user = auth.currentUser;
+
+    if (user) {
+
+        const hasVoted = await checkVote(user.uid);
+
+        if (!hasVoted) {
+
+            addVote(user.uid, 'Ramesh Potelia');
+
+        } else {
+
+            document.getElementById('message').innerText = 'You have already voted!';
+
+        }
+
+    }
+
+});
+
+document.getElementById('vote-candidate2').addEventListener('click', async () => {
+
+    const user = auth.currentUser;
+
+    if (user) {
+
+        const hasVoted = await checkVote(user.uid);
+
+        if (!hasVoted) {
+
+            addVote(user.uid, 'Kevalchand Saran');
+
+        } else {
+
+            document.getElementById('message').innerText = 'You have already voted!';
+
+        }
+
+    }
+
+});
+
+// Check if user has already voted
+
+async function checkVote(userId) {
+
+    const votesRef = collection(db, "votes");
+
+    const voteQuery = query(votesRef, where("userId", "==", userId));
+
+    const querySnapshot = await getDocs(voteQuery);
+
+    return !querySnapshot.empty;
+
+}
